@@ -21,8 +21,8 @@ Project from [roadmap.sh](https://roadmap.sh/projects/job-listings-scraper).
 ## Installation
 
 ```bash
-git clone https://github.com/abhishekh1123/job-listings-scraper.git
-cd job-listings-scraper
+git clone https://github.com/abhishekh1123/Web-Scraper.git
+cd Web-Scraper
 
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
