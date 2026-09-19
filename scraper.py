@@ -1,17 +1,17 @@
+import csv
 import requests
 from bs4 import BeautifulSoup
 
 URL = "https://realpython.github.io/fake-jobs/"
+OUTPUT_FILE = "jobs.csv"
+FIELDNAMES = ["title", "company", "location", "url"]
 
-response = requests.get(URL, timeout=10)
-response.raise_for_status()
 
-soup = BeautifulSoup(response.text, "html.parser")
+def fetch_page(url):
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    return response.text
 
-results = soup.find(id="ResultsContainer")
-cards = results.find_all("div", class_="card")
-
-print("cards found:", len(cards))
 
 def get_text(card, tag, class_name, default=""):
     element = card.find(tag, class_=class_name)
@@ -27,17 +27,36 @@ def get_apply_link(card, default=""):
     return link.get("href", default)
 
 
-jobs = []
+def parse_jobs(html):
+    soup = BeautifulSoup(html, "html.parser")
+    results = soup.find(id="ResultsContainer")
+    if results is None:
+        return []
 
-for card in cards:
-    job = {
-        "title": get_text(card, "h2", "title"),
-        "company": get_text(card, "h3", "company"),
-        "location": get_text(card, "p", "location"),
-        "url": get_apply_link(card),
-    }
-    jobs.append(job)
+    jobs = []
+    for card in results.find_all("div", class_="card"):
+        jobs.append({
+            "title": get_text(card, "h2", "title"),
+            "company": get_text(card, "h3", "company"),
+            "location": get_text(card, "p", "location"),
+            "url": get_apply_link(card),
+        })
+    return jobs
 
-print("jobs collected:", len(jobs))
-for job in jobs[:3]:
-    print(job)
+
+def save_to_csv(jobs, filename):
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(jobs)
+
+
+def main():
+    html = fetch_page(URL)
+    jobs = parse_jobs(html)
+    save_to_csv(jobs, OUTPUT_FILE)
+    print(f"Scraped {len(jobs)} jobs to {OUTPUT_FILE}")
+
+
+if __name__ == "__main__":
+    main()
